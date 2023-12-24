@@ -1,32 +1,32 @@
 import { Injectable } from '@nestjs/common';
-
-import { v4 } from 'uuid';
-
-import { Cart } from '../models';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Cart } from '../models/cart.entity';
+import { Repository, UpdateResult } from 'typeorm';
 
 @Injectable()
 export class CartService {
-  private userCarts: Record<string, Cart> = {};
+  constructor(
+    @InjectRepository(Cart)
+    private readonly cartRepository: Repository<Cart>,
+  ) {}
 
-  findByUserId(userId: string): Cart {
-    return this.userCarts[ userId ];
+  async findByUserId(userId: string): Promise<Cart> {
+    return this.cartRepository.findOneBy({user_id: userId});
   }
 
-  createByUserId(userId: string) {
-    const id = v4();
-    const userCart = {
-      id,
-      user_id: userId,
-      items: [],
-    };
-
-    this.userCarts[ userId ] = userCart;
-
-    return userCart;
+  async createByUserId(userId: string) {
+    const cart = this.cartRepository.create({
+      user_id: userId, 
+      items: [], 
+      updated_at: Date.now().toLocaleString(),
+      created_at: Date.now().toLocaleString(),
+      status: "OPEN"
+    });
+    return this.cartRepository.save(cart);
   }
 
-  findOrCreateByUserId(userId: string): Cart {
-    const userCart = this.findByUserId(userId);
+  async findOrCreateByUserId(userId: string): Promise<Cart> {
+    const userCart = await this.findByUserId(userId);
 
     if (userCart) {
       return userCart;
@@ -35,22 +35,18 @@ export class CartService {
     return this.createByUserId(userId);
   }
 
-  updateByUserId(userId: string, { items }: Cart): Cart {
-    const { id, ...rest } = this.findOrCreateByUserId(userId);
+  async updateByUserId(userId: string, { items }: Cart): Promise<UpdateResult> {
+    const { id, ...rest } = await this.findOrCreateByUserId(userId);
 
     const updatedCart = {
-      id,
       ...rest,
       items: [ ...items ],
     }
 
-    this.userCarts[ userId ] = { ...updatedCart };
-
-    return { ...updatedCart };
+    return this.cartRepository.update(id, updatedCart);
   }
 
   removeByUserId(userId): void {
-    this.userCarts[ userId ] = null;
+    this.cartRepository.delete({user_id: userId})
   }
-
 }
