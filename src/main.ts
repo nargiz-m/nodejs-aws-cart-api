@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { Callback, Context, Handler } from 'aws-lambda';
-import awsServerlessExpress from 'aws-serverless-express';
+import serverlessExpress from '@vendia/serverless-express';
 
 let server: Handler;
 
@@ -13,9 +13,10 @@ async function bootstrap() {
     origin: (req, callback) => callback(null, true),
   });
   app.use(helmet());
-  
   await app.init();
-  return awsServerlessExpress({ app });;
+  
+  const expressApp = app.getHttpAdapter().getInstance();
+  return serverlessExpress({ app: expressApp });
 }
 
 export const handler: Handler = async (
