@@ -28,3 +28,10 @@ create table orders(
     status text,
     total integer
 );
+
+create table users(
+	id uuid not null default uuid_generate_v4() primary key,
+	username text,
+	email text,
+	password text
+);

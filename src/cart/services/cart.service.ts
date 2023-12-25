@@ -17,13 +17,13 @@ export class CartService {
   }
 
   async createByUserId(userId: string) {
-    const cart = this.cartRepository.create({
+    const cart = await this.cartRepository.create({
       user_id: userId, 
-      updated_at: Date.now().toLocaleString(),
-      created_at: Date.now().toLocaleString(),
+      updated_at: new Date(Date.now()).toDateString(),
+      created_at: new Date(Date.now()).toDateString(),
       status: "OPEN"
     });
-    return this.cartRepository.save(cart);
+    return await this.cartRepository.save(cart);
   }
 
   async findOrCreateByUserId(userId: string): Promise<Cart> {

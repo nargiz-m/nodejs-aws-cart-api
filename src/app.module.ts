@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Cart, CartItem } from './cart/models/cart.entity';
-import { CartService } from './cart';
-import { CartController } from './cart/cart.controller';
+import { Cart, CartItem, CartService, CartController } from './cart';
 import 'dotenv/config';
 import { Order, OrderService } from './order';
+import { User, UsersService } from './users';
+import { AuthService } from './auth';
+import { JwtService } from '@nestjs/jwt';
+import { AppController } from './app.controller';
+import { BasicStrategy, LocalStrategy } from './auth/strategies';
 
 @Module({
   imports: [
@@ -15,7 +18,7 @@ import { Order, OrderService } from './order';
       username: process.env.POSTGRES_USERNAME,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DATABASE,
-      entities: [Cart, CartItem, Order],
+      entities: [Cart, CartItem, Order, User],
       ssl: true,
       extra: {
         ssl: {
@@ -23,9 +26,9 @@ import { Order, OrderService } from './order';
         },
       },
     }),
-    TypeOrmModule.forFeature([Cart, CartItem, Order]),
+    TypeOrmModule.forFeature([Cart, CartItem, Order, User]),
   ],
-  controllers: [CartController],
-  providers: [CartService, OrderService],
+  controllers: [CartController, AppController],
+  providers: [CartService, OrderService, UsersService, AuthService, JwtService, BasicStrategy, LocalStrategy],
 })
 export class AppModule {}
