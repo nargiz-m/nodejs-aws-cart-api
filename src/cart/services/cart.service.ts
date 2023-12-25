@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cart, CartItem } from '../models/cart.entity';
-import { Repository, UpdateResult } from 'typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class CartService {
@@ -48,6 +48,10 @@ export class CartService {
         await this.cartItemRepository.insert(itemEntity);
       }
     })
+  }
+
+  async updateStatus(userId: string) {
+    await this.cartRepository.update({user_id: userId}, { status: "ORDERED"});
   }
 
   async removeByUserId(userId) {

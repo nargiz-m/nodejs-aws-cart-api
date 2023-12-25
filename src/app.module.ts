@@ -4,6 +4,7 @@ import { Cart, CartItem } from './cart/models/cart.entity';
 import { CartService } from './cart';
 import { CartController } from './cart/cart.controller';
 import 'dotenv/config';
+import { Order, OrderService } from './order';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import 'dotenv/config';
       username: process.env.POSTGRES_USERNAME,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DATABASE,
-      entities: [Cart, CartItem],
+      entities: [Cart, CartItem, Order],
       ssl: true,
       extra: {
         ssl: {
@@ -22,9 +23,9 @@ import 'dotenv/config';
         },
       },
     }),
-    TypeOrmModule.forFeature([Cart, CartItem]),
+    TypeOrmModule.forFeature([Cart, CartItem, Order]),
   ],
   controllers: [CartController],
-  providers: [CartService],
+  providers: [CartService, OrderService],
 })
 export class AppModule {}

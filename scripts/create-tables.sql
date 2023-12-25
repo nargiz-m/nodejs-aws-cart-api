@@ -16,3 +16,15 @@ create table cart_item (
     count integer,
     foreign key (cart_id) references cart(id)
 );
+
+create table orders(
+	id uuid not null default uuid_generate_v4() primary key,
+    user_id uuid not null,
+	cart_id uuid not null,
+    foreign key (cart_id) references cart(id),
+    payment json,
+    delivery json,
+    comments text,
+    status text,
+    total integer
+);

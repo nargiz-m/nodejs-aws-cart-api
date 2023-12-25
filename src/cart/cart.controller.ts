@@ -2,11 +2,13 @@ import { Controller, Get, Delete, Put, Body, Req, Post, UseGuards, HttpStatus } 
 // import { BasicAuthGuard, JwtAuthGuard } from '../auth';
 import { AppRequest, getUserIdFromRequest } from '../shared';
 import { CartService } from './services/cart.service';
+import { OrderService } from '../order';
 
 @Controller('api/profile/cart')
 export class CartController {
   constructor(
-    private cartService: CartService
+    private cartService: CartService,
+    private orderService: OrderService
   ) { }
 
   // @UseGuards(JwtAuthGuard)
@@ -63,14 +65,30 @@ export class CartController {
       }
     }
 
-    const { id: cartId, items } = cart;
-    //create order here
-    this.cartService.removeByUserId(userId);
+    if(!body.delivery || !body.payment) {
+      const statusCode = HttpStatus.BAD_REQUEST;
+      req.statusCode = statusCode
+
+      return {
+        statusCode,
+        message: 'Please add delivery and payment info',
+      }
+    }
+
+    const order = await this.orderService.create({
+      cart_id: cart.id,
+      user_id: cart.user_id,
+      payment: body.payment,
+      delivery: body.delivery,
+      status: "new",
+      total: cart.items.reduce((acc, val) => acc + val.count, 0)
+    })
+    await this.cartService.updateStatus(userId);
 
     return {
       statusCode: HttpStatus.OK,
       message: 'OK',
-      data: {  }
+      data: { order }
     }
   }
 }
