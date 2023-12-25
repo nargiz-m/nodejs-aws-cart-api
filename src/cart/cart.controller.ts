@@ -83,7 +83,7 @@ export class CartController {
       status: "new",
       total: cart.items.reduce((acc, val) => acc + val.count, 0)
     })
-    await this.cartService.updateStatus(userId);
+    await this.cartService.updateStatus(cart.id);
 
     return {
       statusCode: HttpStatus.OK,

@@ -50,8 +50,8 @@ export class CartService {
     })
   }
 
-  async updateStatus(userId: string) {
-    await this.cartRepository.update({user_id: userId}, { status: "ORDERED"});
+  async updateStatus(id: string) {
+    await this.cartRepository.update({id}, {status: "ORDERED"});
   }
 
   async removeByUserId(userId) {
