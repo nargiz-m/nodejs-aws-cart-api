@@ -1,4 +1,4 @@
-import { CartItem } from '../../cart/models';
+import { CartItem } from '../../cart';
 
 export type Order = {
   id?: string,

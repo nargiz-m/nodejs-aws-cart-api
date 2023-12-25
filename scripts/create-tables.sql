@@ -11,7 +11,8 @@ create table cart (
 create extension if not exists "uuid-ossp";
 
 create table cart_item (
-	cart_id uuid not null references cart(id),
+	cart_id uuid not null,
     product_id uuid,
-    count integer
+    count integer,
+    foreign key (cart_id) references cart(id)
 );

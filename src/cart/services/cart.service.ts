@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Cart } from '../models/cart.entity';
+import { Cart, CartItem } from '../models/cart.entity';
 import { Repository, UpdateResult } from 'typeorm';
 
 @Injectable()
@@ -8,10 +8,12 @@ export class CartService {
   constructor(
     @InjectRepository(Cart)
     private readonly cartRepository: Repository<Cart>,
+    @InjectRepository(CartItem)
+    private readonly cartItemRepository: Repository<CartItem>,
   ) {}
 
   async findByUserId(userId: string): Promise<Cart> {
-    return this.cartRepository.findOneBy({user_id: userId});
+    return await this.cartRepository.findOne({where: {user_id: userId}, relations : ["items"]});
   }
 
   async createByUserId(userId: string) {

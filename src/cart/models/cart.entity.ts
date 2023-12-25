@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Cart {
@@ -21,13 +21,13 @@ export class Cart {
     items: CartItem[]
 }
 
-@Entity()
+@Entity('cart_item')
 export class CartItem {
     @ManyToOne(() => Cart, (cart) => cart.id)
-    @PrimaryColumn({type: 'uuid', nullable: false})
+    @JoinColumn({name: 'cart_id'})
     cart_id: string;
 
-    @Column({type: 'uuid', nullable: false})
+    @PrimaryColumn({type: 'uuid', nullable: false})
     product_id: string;
 
     @Column({type: 'integer', nullable: false})
