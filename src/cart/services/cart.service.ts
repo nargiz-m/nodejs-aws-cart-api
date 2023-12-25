@@ -19,7 +19,6 @@ export class CartService {
   async createByUserId(userId: string) {
     const cart = this.cartRepository.create({
       user_id: userId, 
-      items: [], 
       updated_at: Date.now().toLocaleString(),
       created_at: Date.now().toLocaleString(),
       status: "OPEN"
@@ -37,18 +36,23 @@ export class CartService {
     return this.createByUserId(userId);
   }
 
-  async updateByUserId(userId: string, { items }: Cart): Promise<UpdateResult> {
-    const { id, ...rest } = await this.findOrCreateByUserId(userId);
-
-    const updatedCart = {
-      ...rest,
-      items: [ ...items ],
-    }
-
-    return this.cartRepository.update(id, updatedCart);
+  async updateByUserId(userId: string, items: CartItem[]) {
+    const cart = await this.findOrCreateByUserId(userId);
+    await items.forEach(async (item) => {
+      const currentItem = cart.items.find((cartItem) => cartItem.product_id === item.product_id)
+      if(currentItem) {
+        await this.cartItemRepository.update({cart_id: cart.id, product_id: item.product_id}, { count: item.count + currentItem.count});
+      } else {
+        item.cart_id = cart.id
+        const itemEntity = await this.cartItemRepository.create(item);
+        await this.cartItemRepository.insert(itemEntity);
+      }
+    })
   }
 
-  removeByUserId(userId): void {
-    this.cartRepository.delete({user_id: userId})
+  async removeByUserId(userId) {
+    const cart = await this.findByUserId(userId)
+    this.cartItemRepository.delete({cart_id: cart.id})
+    this.cartRepository.delete({id: cart.id})
   }
 }
