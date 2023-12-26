@@ -2,13 +2,15 @@ import { Controller, Get, Delete, Put, Body, Req, Post, UseGuards, HttpStatus } 
 import { BasicAuthGuard } from '../auth';
 import { AppRequest, getUserIdFromRequest } from '../shared';
 import { CartService } from './services/cart.service';
-import { OrderService } from '../order';
+import { Order } from '../order';
+import { DataSource } from 'typeorm';
+import { Cart } from './models/cart.entity';
 
 @Controller('api/profile/cart')
 export class CartController {
   constructor(
-    private cartService: CartService,
-    private orderService: OrderService
+    private dataSource: DataSource,
+    private cartService: CartService
   ) { }
 
   @UseGuards(BasicAuthGuard)
@@ -71,20 +73,37 @@ export class CartController {
       }
     }
 
-    const order = await this.orderService.create({
-      cart_id: cart.id,
-      user_id: cart.user_id,
-      payment: body.payment,
-      delivery: body.delivery,
-      status: "new",
-      total: cart.items.reduce((acc, val) => acc + val.count, 0)
-    })
-    await this.cartService.updateStatus(cart.id);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'OK',
-      data: { order }
+    try {
+      const orderEntity: Partial<Order> = {
+        cart_id: cart.id,
+        user_id: cart.user_id,
+        payment: body.payment,
+        delivery: body.delivery,
+        status: "new",
+        total: cart.items.reduce((acc, val) => acc + val.count, 0)
+      }
+      const createdOrder = await queryRunner.manager.create(Order, orderEntity);
+      await queryRunner.manager.save(createdOrder)
+      const order = await queryRunner.manager.update(Cart, {id: cart.id}, {status: 'ORDERED'});
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'OK',
+        data: { createdOrder }
+      }
+    } catch (error) {
+      console.log(error)
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+      return {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Order creation failed'
+      }
     }
   }
 }
