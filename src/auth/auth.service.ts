@@ -42,8 +42,8 @@ export class AuthService {
 
   loginBasic(user: User) {
     function encodeUserToken(user) {
-      const { id, name, password } = user;
-      const buf = Buffer.from([name, password].join(':'), 'utf8');
+      const { username, password } = user;
+      const buf = Buffer.from([username, password].join(':'), 'utf8');
 
       return buf.toString('base64');
     }
