@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CartController } from './cart.controller';
-import { OrderModule } from '../order/order.module';
-import { CartService } from './services';
+import { CartService } from './services/cart.service';
 
 describe('CartController', () => {
   let controller: CartController;
@@ -10,7 +9,6 @@ describe('CartController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CartController],
       providers: [CartService],
-      imports: [OrderModule]
     }).compile();
 
     controller = module.get<CartController>(CartController);

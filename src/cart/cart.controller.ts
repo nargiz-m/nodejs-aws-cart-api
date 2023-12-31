@@ -1,50 +1,42 @@
 import { Controller, Get, Delete, Put, Body, Req, Post, UseGuards, HttpStatus } from '@nestjs/common';
-
-// import { BasicAuthGuard, JwtAuthGuard } from '../auth';
-import { OrderService } from '../order';
+import { BasicAuthGuard } from '../auth';
 import { AppRequest, getUserIdFromRequest } from '../shared';
-
-import { calculateCartTotal } from './models-rules';
-import { CartService } from './services';
+import { CartService } from './services/cart.service';
+import { Order } from '../order';
+import { DataSource } from 'typeorm';
+import { Cart } from './models/cart.entity';
 
 @Controller('api/profile/cart')
 export class CartController {
   constructor(
-    private cartService: CartService,
-    private orderService: OrderService
+    private dataSource: DataSource,
+    private cartService: CartService
   ) { }
 
-  // @UseGuards(JwtAuthGuard)
-  // @UseGuards(BasicAuthGuard)
+  @UseGuards(BasicAuthGuard)
   @Get()
-  findUserCart(@Req() req: AppRequest) {
-    const cart = this.cartService.findOrCreateByUserId(getUserIdFromRequest(req));
+  async findUserCart(@Req() req: AppRequest) {
+    const cart = await this.cartService.findOrCreateByUserId(getUserIdFromRequest(req));
 
     return {
       statusCode: HttpStatus.OK,
       message: 'OK',
-      data: { cart, total: calculateCartTotal(cart) },
+      data: { cart },
     }
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @UseGuards(BasicAuthGuard)
+  @UseGuards(BasicAuthGuard)
   @Put()
-  updateUserCart(@Req() req: AppRequest, @Body() body) { // TODO: validate body payload...
-    const cart = this.cartService.updateByUserId(getUserIdFromRequest(req), body)
+  async updateUserCart(@Req() req: AppRequest, @Body() body) { // TODO: validate body payload...
+    await this.cartService.updateByUserId(getUserIdFromRequest(req), body)
 
     return {
       statusCode: HttpStatus.OK,
-      message: 'OK',
-      data: {
-        cart,
-        total: calculateCartTotal(cart),
-      }
+      message: 'Cart is updated'
     }
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @UseGuards(BasicAuthGuard)
+  @UseGuards(BasicAuthGuard)
   @Delete()
   clearUserCart(@Req() req: AppRequest) {
     this.cartService.removeByUserId(getUserIdFromRequest(req));
@@ -55,12 +47,11 @@ export class CartController {
     }
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @UseGuards(BasicAuthGuard)
+  @UseGuards(BasicAuthGuard)
   @Post('checkout')
-  checkout(@Req() req: AppRequest, @Body() body) {
+  async checkout(@Req() req: AppRequest, @Body() body) {
     const userId = getUserIdFromRequest(req);
-    const cart = this.cartService.findByUserId(userId);
+    const cart = await this.cartService.findByUserId(userId);
 
     if (!(cart && cart.items.length)) {
       const statusCode = HttpStatus.BAD_REQUEST;
@@ -72,21 +63,47 @@ export class CartController {
       }
     }
 
-    const { id: cartId, items } = cart;
-    const total = calculateCartTotal(cart);
-    const order = this.orderService.create({
-      ...body, // TODO: validate and pick only necessary data
-      userId,
-      cartId,
-      items,
-      total,
-    });
-    this.cartService.removeByUserId(userId);
+    if(!body.delivery || !body.payment) {
+      const statusCode = HttpStatus.BAD_REQUEST;
+      req.statusCode = statusCode
 
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'OK',
-      data: { order }
+      return {
+        statusCode,
+        message: 'Please add delivery and payment info',
+      }
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const orderEntity: Partial<Order> = {
+        cart_id: cart.id,
+        user_id: cart.user_id,
+        payment: body.payment,
+        delivery: body.delivery,
+        status: "new",
+        total: cart.items.reduce((acc, val) => acc + val.count, 0)
+      }
+      const createdOrder = await queryRunner.manager.create(Order, orderEntity);
+      await queryRunner.manager.save(createdOrder)
+      const order = await queryRunner.manager.update(Cart, {id: cart.id}, {status: 'ORDERED'});
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'OK',
+        data: { createdOrder }
+      }
+    } catch (error) {
+      console.log(error)
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+      return {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Order creation failed'
+      }
     }
   }
 }
