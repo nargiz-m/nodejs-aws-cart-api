@@ -1,0 +1,6 @@
+# local build
+/dist
+# compiled local npm dependencies
+/node_modules
+# docker related files
+Dockerfile
