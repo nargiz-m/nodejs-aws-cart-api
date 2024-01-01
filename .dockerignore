@@ -2,6 +2,8 @@
 dist
 # npm install output
 node_modules
+# elasticbean generated file
+.elasticbeanstalk
 # unnessecary folders
 screenshots
 scripts
