@@ -1,6 +1,19 @@
-# local build
-/dist
-# compiled local npm dependencies
-/node_modules
-# docker related files
-Dockerfile
+# npm run build output
+dist
+# npm install output
+node_modules
+# non-applicable git, lambda, config and other files
+lib
+bin
+screenshots
+scripts
+test
+.git
+.github
+.gitignore
+.npmignore
+cdk.json
+README.md
+webpack.config.js
+tsconfig.build.json
+.prettierrc

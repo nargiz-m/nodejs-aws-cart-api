@@ -3,6 +3,7 @@
 /node_modules
 !jest.config.js
 *.d.ts
+.env
 
 # CDK asset staging directory
 .cdk.staging
