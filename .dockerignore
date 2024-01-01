@@ -11,6 +11,7 @@ test
 # lambda and other config files
 lib
 bin
+.vscode
 .git
 .github
 .gitignore
