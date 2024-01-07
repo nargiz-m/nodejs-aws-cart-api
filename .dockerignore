@@ -1,0 +1,23 @@
+# npm run build output
+dist
+# npm install output
+node_modules
+# elasticbean generated file
+.elasticbeanstalk
+# unnessecary folders
+screenshots
+scripts
+test
+# lambda and other config files
+lib
+bin
+.vscode
+.git
+.github
+.gitignore
+.npmignore
+cdk.json
+README.md
+webpack.config.js
+tsconfig.build.json
+.prettierrc

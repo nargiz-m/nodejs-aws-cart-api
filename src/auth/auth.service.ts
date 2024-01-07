@@ -1,14 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/services/users.service';
 import { User } from '../users';
-import { JWT_CONFIG } from '../constants';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService
+    private usersService: UsersService
   ) {}
 
   async validateUser(username: string, password: string): Promise<User> {
@@ -22,22 +19,7 @@ export class AuthService {
   }
 
   login(user: User, type) {
-    const LOGIN_MAP = {
-      jwt: this.loginJWT,
-      basic: this.loginBasic,
-      default: this.loginJWT,
-    }
-    const login = LOGIN_MAP[ type ]
-
-    return login ? login(user) : LOGIN_MAP.default(user);
-  }
-
-  loginJWT(user: User) {
-    
-    return {
-      token_type: 'Bearer',
-      access_token: this.jwtService.sign(user, {secret: JWT_CONFIG.secret}),
-    };
+    return this.loginBasic(user)
   }
 
   loginBasic(user: User) {

@@ -5,7 +5,6 @@ import 'dotenv/config';
 import { Order, OrderService } from './order';
 import { User, UsersService } from './users';
 import { AuthService } from './auth';
-import { JwtService } from '@nestjs/jwt';
 import { AppController } from './app.controller';
 import { BasicStrategy, LocalStrategy } from './auth/strategies';
 
@@ -29,6 +28,6 @@ import { BasicStrategy, LocalStrategy } from './auth/strategies';
     TypeOrmModule.forFeature([Cart, CartItem, Order, User]),
   ],
   controllers: [CartController, AppController],
-  providers: [CartService, OrderService, UsersService, AuthService, JwtService, BasicStrategy, LocalStrategy],
+  providers: [CartService, OrderService, UsersService, AuthService, BasicStrategy, LocalStrategy],
 })
 export class AppModule {}
